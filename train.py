@@ -3,6 +3,7 @@ from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.optimizers import RMSprop
 import model as m
 train_dir ='./digit/trainingSet/'
+validation_dir = './digit/testSet/'
 train_datagen = ImageDataGenerator(
     rescale=1./255.,
     rotation_range=40,
@@ -10,21 +11,21 @@ train_datagen = ImageDataGenerator(
     height_shift_range=0.2,
     shear_range= 0.2,
     fill_mode='nearest',
-    validation_split = 0.2
+)
+validation_datagen = ImageDataGenerator(
+    rescale=1./255.
 )
 train_generator = train_datagen.flow_from_directory(
     train_dir,
     target_size=(28 ,28),
     batch_size= 375,
     class_mode= 'categorical',
-    subset = 'training'
 )
 validation_generator = train_datagen.flow_from_directory(
-    train_dir,
+    validation_dir,
     target_size=(28 ,28),
     batch_size= 375,
     class_mode= 'categorical',
-    subset = 'validation'
 )
 class myCallback(Callback):
     def on_epoch_end(self, epoch, logs={}):
@@ -41,9 +42,11 @@ model.summary()
 history = model.fit_generator(
     train_generator,
     steps_per_epoch=train_generator.samples//375,
-    epochs =20,
+    epochs =10,
     callbacks =[callbacks],
     verbose =1,
+    validation_data =validation_generator,
     validation_steps=validation_generator.samples//375
-    # use_multiprocessing= True
 )
+
+model.save('./model_weights/weight')
